@@ -14,5 +14,5 @@ unsigned char sector_buffer[512];
 void main(void)
 {
   screen_setup();
-  for (;;) {}
+  screen_run();
 }

@@ -10,7 +10,18 @@
 #include <atari.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "screen.h"
+#include "sector.h"
+#include "percom.h"
+#include "drive_detect.h"
+
+unsigned char source_drive=1;
+unsigned char destination_drive=1;
+unsigned short sector_size=128;
+unsigned short starting_read_sector=1;
+unsigned short ending_read_sector=720;
+unsigned short starting_write_sector=1;
 
 extern unsigned char sector_buffer[512];
 
@@ -105,6 +116,17 @@ void screen_hilight(unsigned char* v, bool h)
 }
 
 /**
+ * Get screen input, with default value
+ * v = which field to set
+ * i = which var to set
+ * l = length of field
+ * d = default value
+ */
+void screen_input_byte(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
+{
+}
+
+/**
  * screen_cursor(v,cx,ox)
  * set cursor position
  * v = which field to change
@@ -131,13 +153,54 @@ void screen_setup(void)
 }
 
 /**
+ * screen_num(v,n)
+ * update screen with new number
+ */
+void screen_num(unsigned char* v, long n)
+{
+  char tmp[6];
+  unsigned char i;
+
+  // Convert to string.
+  utoa(n,tmp,10);
+
+  // Convert string to screen code
+  for (i=0;i<6;i++)
+    {
+      if (tmp[i]==0)
+	break;
+      else
+	v[CURSOR_BEGIN_X+i]=tmp[i]-32;
+    }
+}
+
+/**
+ * Display output from percom block
+ */
+void screen_percom_block(PercomBlock* pb)
+{
+  screen_num(screen_sector_size,pb->sector_size);
+  screen_num(screen_starting_read_sector,1);
+  screen_num(screen_ending_read_sector,ending_read_sector);
+  screen_num(screen_starting_write_sector,1);
+}
+
+/**
  * screen_run(void)
  * Run the screen UI
  */
 void screen_run(void)
 {
-  screen_hilight(screen_source_drive,true);
-  screen_cursor(screen_source_drive,CURSOR_BEGIN_X,CURSOR_BEGIN_X);
+  unsigned short i;
+  PercomBlock pb;
 
-  for(;;) {}
+  ending_read_sector=drive_detect(source_drive,destination_drive,&pb);
+  screen_percom_block(&pb);
+
+  while (OS.ch==0xFF) { }
+  
+  for(i=4;i<ending_read_sector;i++)
+    {      
+      sector_get(source_drive,i,pb.sector_size);
+    }
 }

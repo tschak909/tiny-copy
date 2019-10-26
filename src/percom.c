@@ -51,14 +51,7 @@ unsigned char percom_get(unsigned char d, PercomBlock* p)
     }
   else
     {
-      // Did not receive a valid percom block. fill with default data
-      p->num_tracks=40;
-      p->step_rate=1;
-      p->sectors_per_track=18;
-      p->num_sides=1;
-      p->density=0;
-      p->sector_size=128;
-      p->drive_present=0xFF; // really don't care if it is or not.
+      percom_get_default_parameters(p);
     }
 
   return OS.dcb.dstats;
@@ -97,4 +90,20 @@ unsigned char percom_set(unsigned char d, PercomBlock* p)
   _sys(&r);
 
   return OS.dcb.dstats;
+}
+
+/**
+ * Get default parameters
+ * Returns a dummy percom block if drive does not
+ * support the command, e.g. Atari 810/1050
+ */
+void percom_get_default_parameters(PercomBlock* pb)
+{
+  pb->num_tracks=40;
+  pb->step_rate=1;
+  pb->sectors_per_track=18;
+  pb->num_sides=1;
+  pb->density=0;
+  pb->sector_size=128;
+  pb->drive_present=0xFF; // really don't care if it is or not.
 }

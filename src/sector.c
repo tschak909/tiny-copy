@@ -30,7 +30,12 @@ unsigned char sector_get(unsigned char d, unsigned short s, unsigned short z)
   OS.dcb.dbuf=&sector_buffer;   // Point to sector buffer
   OS.dcb.dtimlo=0x0F; // Timeout
   OS.dcb.dstats=0x40; // tell SIO it's a read.
-  OS.dcb.dbyt=z;     // grab a sector's worth
+
+  if (sector<4)
+    OS.dcb.dbyt=128;  // First 3 sectors are always 128 bytes
+  else
+    OS.dcb.dbyt=z;    // grab a sector's worth
+
   OS.dcb.daux=s;      // Sector #
   
   // Call SIOV

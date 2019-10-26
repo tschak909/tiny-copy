@@ -38,4 +38,11 @@ unsigned char percom_get(unsigned char d, PercomBlock* p);
  */
 unsigned char percom_set(unsigned char d, PercomBlock* p);
 
+/**
+ * Get default parameters
+ * Returns a dummy percom block if drive does not
+ * support the command, e.g. Atari 810/1050
+ */
+void percom_get_default_parameters(PercomBlock* pb);
+
 #endif /* PERCOM_H */ 

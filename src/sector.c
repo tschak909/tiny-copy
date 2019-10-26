@@ -31,7 +31,7 @@ unsigned char sector_get(unsigned char d, unsigned short s, unsigned short z)
   OS.dcb.dtimlo=0x0F; // Timeout
   OS.dcb.dstats=0x40; // tell SIO it's a read.
 
-  if (sector<4)
+  if (s<4)
     OS.dcb.dbyt=128;  // First 3 sectors are always 128 bytes
   else
     OS.dcb.dbyt=z;    // grab a sector's worth

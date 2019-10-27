@@ -17,7 +17,7 @@
  * s = sector #
  * z = sector size
  */
-unsigned char sector_get(unsigned char d, unsigned short s, unsigned short z);
+unsigned char sector_get(unsigned char d, unsigned short s, unsigned short z, unsigned char* buf);
 
 /**
  * Put sector from sector_buffer
@@ -25,6 +25,6 @@ unsigned char sector_get(unsigned char d, unsigned short s, unsigned short z);
  * s = sector #
  * z = sector size
  */
-unsigned char sector_put(unsigned char d, unsigned short s, unsigned short z);
+unsigned char sector_put(unsigned char d, unsigned short s, unsigned short z, unsigned char* buf);
 
 #endif /* PERCOM_H */ 

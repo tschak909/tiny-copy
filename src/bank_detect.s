@@ -1,6 +1,6 @@
 
 	.include "atari.inc"
-	.export _mem_detect, _banks, _bsav
+	.export _bank_detect, _banks, _bsav
 
 	;; Detect extended memory banks for XL/XE systems.
 	;; Borrowed from: 
@@ -9,7 +9,7 @@ ext_b = $4000; anything in the range of $ 4000- $ 7FFF
 portb = $d301
 
 ; procedure
-_mem_detect:	
+_bank_detect:	
        lda portb
        pha
 

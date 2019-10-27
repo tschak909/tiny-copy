@@ -10,7 +10,9 @@
 #include <atari.h>
 #include "bank.h"
 
+extern unsigned char bank_detect(void);
 extern unsigned char banks[64];
+unsigned char num_banks;
 
 /**
  * Select desired bank.
@@ -19,13 +21,4 @@ extern unsigned char banks[64];
 void bank_select(unsigned char b)
 {
   PIA.portb=banks[b];
-}
-
-/**
- * Get # of sectors available in lower 64K
- * z = sector size
- */
-unsigned short lomem_num_sectors(unsigned short z)
-{
-  return ((OS.memtop - 0x1000)/z);
 }

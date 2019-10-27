@@ -201,6 +201,6 @@ void screen_run(void)
   
   for(i=1;i<=ending_read_sector;i++)
     {      
-      sector_get(source_drive,i,pb.sector_size);
+      sector_get(source_drive,i,pb.sector_size,sector_buffer);
     }
 }

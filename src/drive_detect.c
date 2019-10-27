@@ -7,6 +7,8 @@
 
 #define DETECT_READ_SECTOR 4
 
+extern unsigned char sector_buffer;
+
 /**
  * Detect drive sector size/density
  * by reading a non-boot sector
@@ -19,7 +21,7 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
 {
   unsigned char status;
 
-  status=sector_get(s,DETECT_READ_SECTOR,128);
+  status=sector_get(s,DETECT_READ_SECTOR,128,&sector_buffer);
   status=percom_get(s,pb);
 
   if (pb->reserved1==0xFF)
@@ -28,7 +30,7 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
       // to read sector 1040 to detect a medium
       // density disk.
 
-      status=sector_get(s,1040,128);
+      status=sector_get(s,1040,128,&sector_buffer);
 
       if (status==0x01) // read successful.
 	{

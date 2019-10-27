@@ -28,10 +28,27 @@ extern unsigned char sector_buffer[512];
 #define DISPLAY_LIST 0x600
 #define SetChar(v,x,a) v[x]=a;
 #define CURSOR_BEGIN_X 23
+#define STATUS_NUM_X   10
 
 // TINY COPY V0.2 (mode 6)
 static unsigned char screen_status[16]=
   {0,52,41,46,57,0,35,47,48,57,0,54,16,14,17,0};
+
+// READING: #
+static unsigned char screen_status_reading[16]=
+  {0,50,37,34,36,41,46,39,0,3,0,0,0,0,0,0};
+
+// WRITING: #
+static unsigned char screen_status_writing[16]=
+  {0,55,50,41,52,41,46,39,0,3,0,0,0,0,0,0};
+
+// FORMATTING
+static unsigned char screen_status_formatting[16]=
+  {0,0,0,38,47,50,45,33,52,52,41,46,39,0,0,0};
+
+// ERROR
+static unsigned char screen_status_error[16]=
+  {0,0,0,37,50,50,47,50,0,0,0,0,0,0,0,0};
 
 // SOURCE DRIVE: 1 (mode 2)
 static unsigned char screen_source_drive[32]=
@@ -156,7 +173,7 @@ void screen_setup(void)
  * screen_num(v,n)
  * update screen with new number
  */
-void screen_num(unsigned char* v, long n)
+void screen_num(unsigned char* v, long n, unsigned char pos)
 {
   char tmp[6];
   unsigned char i;
@@ -170,8 +187,19 @@ void screen_num(unsigned char* v, long n)
       if (tmp[i]==0)
 	break;
       else
-	v[CURSOR_BEGIN_X+i]=tmp[i]-32;
+	v[pos+i]=tmp[i]-32;
     }
+}
+
+/**
+ * Update status bar
+ * msg = pointer to msg to copy into status bar
+ * num = number value to copy into status bar.
+ */
+void screen_status_set(unsigned char* msg, unsigned short num)
+{
+  memcpy(screen_status,msg,16);
+  screen_num(screen_status,num,STATUS_NUM_X);
 }
 
 /**
@@ -179,10 +207,10 @@ void screen_num(unsigned char* v, long n)
  */
 void screen_percom_block(PercomBlock* pb)
 {
-  screen_num(screen_sector_size,pb->sector_size);
-  screen_num(screen_starting_read_sector,1);
-  screen_num(screen_ending_read_sector,ending_read_sector);
-  screen_num(screen_starting_write_sector,1);
+  screen_num(screen_sector_size,pb->sector_size, CURSOR_BEGIN_X);
+  screen_num(screen_starting_read_sector,1, CURSOR_BEGIN_X);
+  screen_num(screen_ending_read_sector,ending_read_sector, CURSOR_BEGIN_X);
+  screen_num(screen_starting_write_sector,1, CURSOR_BEGIN_X);
 }
 
 /**
@@ -201,6 +229,7 @@ void screen_run(void)
   
   for(i=1;i<=ending_read_sector;i++)
     {      
+      screen_status_set(screen_status_reading,i);
       sector_get(source_drive,i,pb.sector_size,sector_buffer);
     }
 }

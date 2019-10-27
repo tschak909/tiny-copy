@@ -199,7 +199,7 @@ void screen_run(void)
 
   while (OS.ch==0xFF) { }
   
-  for(i=4;i<ending_read_sector;i++)
+  for(i=1;i<=ending_read_sector;i++)
     {      
       sector_get(source_drive,i,pb.sector_size);
     }

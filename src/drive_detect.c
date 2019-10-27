@@ -22,6 +22,21 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
   status=sector_get(s,DETECT_READ_SECTOR,128);
   status=percom_get(s,pb);
 
+  if (pb->reserved1==0xFF)
+    {
+      // If we get a default percom block, let's try
+      // to read sector 1040 to detect a medium
+      // density disk.
+
+      status=sector_get(s,1040,128);
+
+      if (status==0x01) // read successful.
+	{
+	  pb->sectors_per_track=26;
+	  pb->density=4; // mfm
+	}
+    }
+
   if (status=0x01)
     percom_set(d,pb); // TODO: get status?
 

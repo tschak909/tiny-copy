@@ -16,4 +16,10 @@
  */
 void bank_select(unsigned char b);
 
+/**
+ * Get # of sectors available in lower 64K
+ * z = sector size
+ */
+unsigned short lomem_num_sectors(unsigned short z);
+
 #endif /* BANK_H */

@@ -106,4 +106,5 @@ void percom_get_default_parameters(PercomBlock* pb)
   pb->density=0;
   pb->sector_size=128;
   pb->drive_present=0xFF; // really don't care if it is or not.
+  pb->reserved1=0xff;     // this is a dummy percom block.
 }

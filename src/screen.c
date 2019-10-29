@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <conio.h>
 #include "screen.h"
 #include "sector.h"
 #include "percom.h"
@@ -34,21 +35,21 @@ extern unsigned char sector_buffer[512];
 static unsigned char screen_status[16]=
   {0,52,41,46,57,0,35,47,48,57,0,54,16,14,17,0};
 
-// READING: #
-static unsigned char screen_status_reading[16]=
-  {0,50,37,34,36,41,46,39,0,3,0,0,0,0,0,0};
+/* // READING: # */
+/* static unsigned char screen_status_reading[16]= */
+/*   {0,50,37,34,36,41,46,39,0,3,0,0,0,0,0,0}; */
 
-// WRITING: #
-static unsigned char screen_status_writing[16]=
-  {0,55,50,41,52,41,46,39,0,3,0,0,0,0,0,0};
+/* // WRITING: # */
+/* static unsigned char screen_status_writing[16]= */
+/*   {0,55,50,41,52,41,46,39,0,3,0,0,0,0,0,0}; */
 
-// FORMATTING
-static unsigned char screen_status_formatting[16]=
-  {0,0,0,38,47,50,45,33,52,52,41,46,39,0,0,0};
+/* // FORMATTING */
+/* static unsigned char screen_status_formatting[16]= */
+/*   {0,0,0,38,47,50,45,33,52,52,41,46,39,0,0,0}; */
 
-// ERROR
-static unsigned char screen_status_error[16]=
-  {0,0,0,37,50,50,47,50,0,0,0,0,0,0,0,0};
+/* // ERROR */
+/* static unsigned char screen_status_error[16]= */
+/*   {0,0,0,37,50,50,47,50,0,0,0,0,0,0,0,0}; */
 
 // SOURCE DRIVE: 1 (mode 2)
 static unsigned char screen_source_drive[32]=
@@ -133,43 +134,6 @@ void screen_hilight(unsigned char* v, bool h)
 }
 
 /**
- * Get screen input, with default value
- * v = which field to set
- * i = which var to set
- * l = length of field
- * d = default value
- */
-void screen_input_byte(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
-{
-}
-
-/**
- * screen_cursor(v,cx,ox)
- * set cursor position
- * v = which field to change
- * cx = current cursor position
- * ox = old character position
- */
-void screen_cursor(unsigned char* v, unsigned char cx, unsigned char ox)
-{
-  if (ox!=cx)
-    v[ox]^=0x80;
-  v[cx]^=0x80;
-}
-
-/**
- * screen_setup(void)
- * Set up atari screen for program
- */
-void screen_setup(void)
-{
-  OS.sdmctl=0x00; // Disable screen DMA while we set up dlist
-  memcpy((void *)DISPLAY_LIST, &dlist, sizeof(dlist));
-  OS.sdlst=(void *)DISPLAY_LIST;
-  OS.sdmctl=0x21; // Enable display list dma; narrow playfield
-}
-
-/**
  * screen_num(v,n)
  * update screen with new number
  */
@@ -189,6 +153,100 @@ void screen_num(unsigned char* v, long n, unsigned char pos)
       else
 	v[pos+i]=tmp[i]-32;
     }
+}
+
+/**
+ * Get screen input, with default value
+ * v = which field to set
+ * i = which var to set
+ * l = length of field
+ * d = default value
+ * ret = arrow key, return, or esc code
+ */
+unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
+{
+  unsigned char pos;
+  unsigned char tmp[6];
+  unsigned char k;
+
+  // Set up default value
+  utoa(d,tmp,10);
+  screen_num(v,d,CURSOR_BEGIN_X);
+  
+  // first highlight the field
+  screen_hilight(v,1);
+
+  // Set cursor to beginning of field.
+  cx=ox=CURSOR_BEGIN_X;
+  screen_cursor(v);
+
+  while (pos<l)
+    {
+      OS.ch=0xFF;
+      
+      if (OS.ch!=0xFF)
+	k=cgetc();
+
+      if ((OS.ch==12) || (OS.ch==142) || (OS.ch==143)) // Terminates the input
+	break;
+      else if (OS.ch==52) // BS
+	{
+	  if (l>0)
+	    {
+	      tmp[pos]=0;
+	      SetChar(v,pos,0); // Update screen memory
+	      pos--;
+	    }
+	}
+      else if ((k>47) && (k<58))
+	{
+	  tmp[pos]=k;
+	  SetChar(v,pos,k-32); // update screen memory
+	  pos++;
+	}
+      
+      // Update cursor
+      if (OS.ch!=0xFF)
+	{
+	  ox=cx;
+	  cx=pos;
+	  screen_cursor(v);
+	}
+    }
+
+  // Convert string to target int
+  (unsigned char)i=atoi(tmp);
+  
+  // then unhighlight the field
+  screen_hilight(v,0);
+  
+  return OS.ch;
+}
+
+/**
+ * screen_cursor(v,cx,ox)
+ * set cursor position
+ * v = which field to change
+ * cx = current cursor position
+ * ox = old character position
+ */
+void screen_cursor(unsigned char* v)
+{
+  if (ox!=cx)
+    v[ox]^=0x80;
+  v[cx]^=0x80;
+}
+
+/**
+ * screen_setup(void)
+ * Set up atari screen for program
+ */
+void screen_setup(void)
+{
+  OS.sdmctl=0x00; // Disable screen DMA while we set up dlist
+  memcpy((void *)DISPLAY_LIST, &dlist, sizeof(dlist));
+  OS.sdlst=(void *)DISPLAY_LIST;
+  OS.sdmctl=0x21; // Enable display list dma; narrow playfield
 }
 
 /**
@@ -219,11 +277,38 @@ void screen_percom_block(PercomBlock* pb)
  */
 void screen_run(void)
 {
-  unsigned short i;
   PercomBlock pb;
-
+  unsigned char ready;
+  unsigned char cf; // Current field.
+  unsigned char k;  // terminated field input key.
+  
   ending_read_sector=drive_detect(source_drive,destination_drive,&pb);
   screen_percom_block(&pb);
 
+  // Get drive parameters.
+  while (ready==0)  // k initially is 0
+    {
+      if (k==12)
+	cf++;
+      else if ((k==142) && (cf>0))
+	cf--;
+      else if ((k==143) && (cf<2))
+	cf++;
+
+      switch(cf)
+	{
+	case 0:
+	  k=screen_input_byte(screen_source_drive,&source_drive,1,1);
+	  break;
+	case 1:
+	  k=screen_input_byte(screen_destination_drive,&destination_drive,1,1);
+	  break;
+	default:
+	  ready=1;
+	  break;
+	}
+    }
+
   for (;;) {}
+  
 }

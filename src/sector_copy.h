@@ -25,6 +25,7 @@ typedef struct _SectorPool
   unsigned short himem;
   unsigned short lomem;
   unsigned char sector_shift;
+  unsigned char bank_shift;
   unsigned char himem_banks;
 } SectorPool;
 

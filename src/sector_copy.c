@@ -13,6 +13,7 @@
 #include "bank.h"
 
 static unsigned char dstats; // Status of last command.
+static SectorCopyParams params;
 static SectorPool pool;
 
 /**
@@ -25,12 +26,15 @@ void sector_copy_init(unsigned short z)
   switch(z)
     {
     case 128:
+      pool.bank_shift=7;
       pool.sector_shift=7;
       break;
     case 256:
+      pool.bank_shift=6;
       pool.sector_shift=8;
       break;
     case 512:
+      pool.bank_shift=5;
       pool.sector_shift=9;
       break;
     }
@@ -54,6 +58,27 @@ unsigned char sector_copy_get_pass_info(unsigned short sectors_to_copy)
     p++;
   
   return p;
+}
+
+/**
+ * Return a pointer to the buffer for a given sector
+ * within a copying pass.
+ * s = sector
+ * ret = pointer to buffer
+ */
+unsigned char* sector_to_buffer(unsigned short s)
+{
+  unsigned char* r;
+  
+  if (s<=pool.lomem)
+    r=(unsigned char *)(0x1000 + (s << pool.sector_shift));
+  else
+    {
+      bank_select(s >> pool.bank_shift);
+      r=(unsigned char *)(0x4000 + ((s << pool.sector_shift)&0x7FFFF));
+    }
+
+  return r;
 }
 
 /**
@@ -83,6 +108,13 @@ unsigned char sector_copy_write(unsigned char pass)
  */
 unsigned char sector_copy(unsigned char s, unsigned char d, unsigned char z, unsigned short rb, unsigned short re, unsigned short wb)
 {
+  params.drive_source=s;
+  params.drive_destination=d;
+  params.sector_size=z;
+  params.starting_read_sector=rb;
+  params.ending_read_sector=re;
+  params.starting_write_sector=wb;
+  sector_copy_init(z);
   
   return dstats;
 }

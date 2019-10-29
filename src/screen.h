@@ -23,10 +23,8 @@ void screen_hilight(unsigned char* v, bool h);
  * screen_cursor(v,cx,ox)
  * set cursor position
  * v = which field to change
- * cx = current cursor position
- * ox = old character position
  */
-void screen_cursor(unsigned char* v, unsigned char cx, unsigned char ox);
+void screen_cursor(unsigned char* v);
 
 /**
  * screen_setup(void)

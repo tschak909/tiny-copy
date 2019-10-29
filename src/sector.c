@@ -9,31 +9,11 @@
 
 #include <atari.h>
 #include <6502.h>
+#include <peekpoke.h>
 #include "sector.h"
 #include "bank.h"
 
 extern unsigned char sector_buffer[512];
-
-unsigned char sector_shift; // Sector shift value.
-
-/**
- * Return sector shift value given size
- */
-void sector_set_shift(unsigned short z)
-{
-  switch(z)
-    {
-    case 128:
-      sector_shift=7;
-      break;
-    case 256:
-      sector_shift=8;
-      break;
-    case 512:
-      sector_shift=9;
-      break;
-    }
-}
 
 /**
  * Get sector, cram into sector_buffer
@@ -92,4 +72,3 @@ unsigned char sector_put(unsigned char d, unsigned short s, unsigned short z, un
 
   return OS.dcb.dstats;
 }
-

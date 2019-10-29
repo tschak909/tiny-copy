@@ -10,7 +10,6 @@
 #include <atari.h>
 #include "bank.h"
 
-extern unsigned char bank_detect(void);
 extern unsigned char banks[64];
 unsigned char num_banks;
 

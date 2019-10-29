@@ -10,6 +10,8 @@
 #ifndef BANK_H
 #define BANK_H
 
+extern unsigned char bank_detect(void);
+
 /**
  * Select desired bank.
  * b = bank # to swap into $4000-$7FFF

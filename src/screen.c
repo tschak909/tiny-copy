@@ -225,11 +225,5 @@ void screen_run(void)
   ending_read_sector=drive_detect(source_drive,destination_drive,&pb);
   screen_percom_block(&pb);
 
-  while (OS.ch==0xFF) { }
-  
-  for(i=1;i<=ending_read_sector;i++)
-    {      
-      screen_status_set(screen_status_reading,i);
-      sector_get(source_drive,i,pb.sector_size,sector_buffer);
-    }
+  for (;;) {}
 }

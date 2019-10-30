@@ -184,24 +184,25 @@ unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned cha
     {
       OS.ch=0xFF;
       
-      if (OS.ch!=0xFF)
-	k=cgetc();
-
+      while (OS.ch==0xFF) { }
+      
       if ((OS.ch==12) || (OS.ch==142) || (OS.ch==143)) // Terminates the input
-	break;
+	{
+	  break;
+	}
       else if (OS.ch==52) // BS
 	{
 	  if (l>0)
 	    {
 	      tmp[pos]=0;
-	      SetChar(v,pos,0); // Update screen memory
+	      SetChar(v,CURSOR_BEGIN_X+pos,0); // Update screen memory
 	      pos--;
 	    }
 	}
       else if ((k>47) && (k<58))
 	{
 	  tmp[pos]=k;
-	  SetChar(v,pos,k-32); // update screen memory
+	  SetChar(v,CURSOR_BEGIN_X+pos,k-32); // update screen memory
 	  pos++;
 	}
       
@@ -214,6 +215,9 @@ unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned cha
 	}
     }
 
+  if (pos==l)
+    OS.ch=12;
+  
   // Convert string to target int
   (unsigned char)i=atoi(tmp);
   
@@ -282,8 +286,8 @@ void screen_run(void)
   unsigned char cf; // Current field.
   unsigned char k;  // terminated field input key.
   
-  ending_read_sector=drive_detect(source_drive,destination_drive,&pb);
-  screen_percom_block(&pb);
+  /* ending_read_sector=drive_detect(source_drive,destination_drive,&pb); */
+  /* screen_percom_block(&pb); */
 
   // Get drive parameters.
   while (ready==0)  // k initially is 0
@@ -292,7 +296,7 @@ void screen_run(void)
 	cf++;
       else if ((k==142) && (cf>0))
 	cf--;
-      else if ((k==143) && (cf<2))
+      else if ((k==143) && (cf<1))
 	cf++;
 
       switch(cf)
@@ -303,10 +307,11 @@ void screen_run(void)
 	case 1:
 	  k=screen_input_byte(screen_destination_drive,&destination_drive,1,1);
 	  break;
-	default:
-	  ready=1;
-	  break;
 	}
+
+      if (cf>1)
+	ready=1;
+      
     }
 
   for (;;) {}

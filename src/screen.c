@@ -168,7 +168,8 @@ unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned cha
   unsigned char pos;
   unsigned char tmp[6];
   unsigned char k;
-
+  bool done;
+  
   // Set up default value
   utoa(d,tmp,10);
   screen_num(v,d,CURSOR_BEGIN_X);
@@ -180,51 +181,56 @@ unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned cha
   cx=ox=CURSOR_BEGIN_X;
   screen_cursor(v);
 
-  while (pos<l)
+  pos=0;
+  done=false;
+  
+  while (done==false)
     {
-      OS.ch=0xFF;
-      
-      while (OS.ch==0xFF) { }
-      
-      if ((OS.ch==12) || (OS.ch==142) || (OS.ch==143)) // Terminates the input
+      k=cgetc();
+      switch(k)
 	{
+	case 0x1C: // Arrow keys.
+	case 0x1D:
+	case 0x1E:
+	case 0x1F:
+	  done=true;
 	  break;
-	}
-      else if (OS.ch==52) // BS
-	{
+	case 0x9B:  // RETURN
+	  done=true;
+	  break;
+	case 0x7E:  // BS
 	  if (l>0)
 	    {
 	      tmp[pos]=0;
-	      SetChar(v,CURSOR_BEGIN_X+pos,0); // Update screen memory
+	      SetChar(v,CURSOR_BEGIN_X+pos,0);
 	      pos--;
 	    }
-	}
-      else if ((k>47) && (k<58))
-	{
+	case 0x30:
+	case 0x31:
+	case 0x32:
+	case 0x33:
+	case 0x34:
+	case 0x35:
+	case 0x36:
+	case 0x37:
+	case 0x38:
+	case 0x39:
 	  tmp[pos]=k;
-	  SetChar(v,CURSOR_BEGIN_X+pos,k-32); // update screen memory
+	  SetChar(v,CURSOR_BEGIN_X+pos,k-32);
 	  pos++;
 	}
-      
-      // Update cursor
-      if (OS.ch!=0xFF)
-	{
-	  ox=cx;
-	  cx=pos;
-	  screen_cursor(v);
-	}
+      if (pos>=l)
+	done=true;
     }
-
-  if (pos==l)
-    OS.ch=12;
   
   // Convert string to target int
   (unsigned char)i=atoi(tmp);
   
   // then unhighlight the field
   screen_hilight(v,0);
-  
-  return OS.ch;
+
+  // Return last key pressed.
+  return k;
 }
 
 /**
@@ -281,24 +287,12 @@ void screen_percom_block(PercomBlock* pb)
  */
 void screen_run(void)
 {
-  PercomBlock pb;
-  unsigned char ready;
-  unsigned char cf; // Current field.
-  unsigned char k;  // terminated field input key.
+  unsigned char cf=0;
+  unsigned char ready=false;
+  unsigned char k;
   
-  /* ending_read_sector=drive_detect(source_drive,destination_drive,&pb); */
-  /* screen_percom_block(&pb); */
-
-  // Get drive parameters.
-  while (ready==0)  // k initially is 0
+  while (ready==false)
     {
-      if (k==12)
-	cf++;
-      else if ((k==142) && (cf>0))
-	cf--;
-      else if ((k==143) && (cf<1))
-	cf++;
-
       switch(cf)
 	{
 	case 0:
@@ -308,12 +302,28 @@ void screen_run(void)
 	  k=screen_input_byte(screen_destination_drive,&destination_drive,1,1);
 	  break;
 	}
-
-      if (cf>1)
-	ready=1;
+      
+      switch(k)
+	{
+	case 0x1C:
+	case 0x1E:
+	  if (cf==1)
+	    cf--;
+	  break;
+	case 0x1D:
+	case 0x1F:
+	  if (cf==0)
+	    cf++;
+	  break;
+	default:
+	  if (cf==0)
+	    cf++;
+	  else
+	    ready=true;
+	}
       
     }
-
+  
   for (;;) {}
   
 }

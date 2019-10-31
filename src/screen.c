@@ -163,7 +163,7 @@ void screen_num(unsigned char* v, long n, unsigned char pos)
  * d = default value
  * ret = arrow key, return, or esc code
  */
-unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
+unsigned char screen_input_char(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
 {
   unsigned char pos;
   unsigned char tmp[6];
@@ -224,7 +224,7 @@ unsigned char screen_input_byte(unsigned char* v, unsigned char* i, unsigned cha
     }
   
   // Convert string to target int
-  (unsigned char)i=atoi(tmp);
+  *i=atoi(tmp);
   
   // then unhighlight the field
   screen_hilight(v,0);
@@ -282,24 +282,23 @@ void screen_percom_block(PercomBlock* pb)
 }
 
 /**
- * screen_run(void)
- * Run the screen UI
+ * Select drives
  */
-void screen_run(void)
+void screen_select_drives(void)
 {
   unsigned char cf=0;
   unsigned char ready=false;
   unsigned char k;
-  
+
   while (ready==false)
     {
       switch(cf)
 	{
 	case 0:
-	  k=screen_input_byte(screen_source_drive,&source_drive,1,1);
+	  k=screen_input_char(screen_source_drive,&source_drive,1,1);
 	  break;
 	case 1:
-	  k=screen_input_byte(screen_destination_drive,&destination_drive,1,1);
+	  k=screen_input_char(screen_destination_drive,&destination_drive,1,1);
 	  break;
 	}
       
@@ -320,9 +319,26 @@ void screen_run(void)
 	    cf++;
 	  else
 	    ready=true;
-	}
-      
+	}   
     }
+}
+
+/**
+ * Select other parameters
+ */
+void screen_other_params(void)
+{
+
+}
+
+/**
+ * screen_run(void)
+ * Run the screen UI
+ */
+void screen_run(void)
+{
+  screen_select_drives();
+  screen_other_params();
   
   for (;;) {}
   

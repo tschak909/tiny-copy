@@ -31,9 +31,12 @@ extern unsigned char sector_buffer[512];
 #define CURSOR_BEGIN_X 23
 #define STATUS_NUM_X   10
 
-// TINY COPY V0.2 (mode 6)
+// SELECT_SECTORS
 static unsigned char screen_status[16]=
-  {0,52,41,46,57,0,35,47,48,57,0,54,16,14,17,0};
+  {0,51,37,44,37,35,52,0,36,50,41,54,37,51,0,0};
+
+static unsigned char screen_status_sectors[16]=
+  {0,51,37,44,37,35,52,0,51,37,35,52,47,50,51,0};
 
 /* // READING: # */
 /* static unsigned char screen_status_reading[16]= */
@@ -61,7 +64,7 @@ static unsigned char screen_destination_drive[32]=
 
 // SECTOR SIZE: 128
 static unsigned char screen_sector_size[32]=
-  {0,0,0,0,0,0,0,0,0,0,51,37,35,52,47,50,0,51,41,58,37,26,0,17,18,24,0,0,0,0,0,0};
+  {0,0,0,0,0,0,0,0,0,0,51,37,35,52,47,50,0,51,41,58,37,26,0,63,63,63,0,0,0,0,0,0};
 
 // STARTING READ SECTOR: _____
 static unsigned char screen_starting_read_sector[32]=
@@ -163,7 +166,7 @@ void screen_num(unsigned char* v, long n, unsigned char pos)
  * d = default value
  * ret = arrow key, return, or esc code
  */
-unsigned char _screen_input(unsigned char* v, unsigned char* tmp, unsigned char l, unsigned char d)
+unsigned char _screen_input(unsigned char* v, unsigned char* tmp, unsigned char l, unsigned short d)
 {
   unsigned char pos;
   unsigned char k;
@@ -341,9 +344,53 @@ void screen_select_drives(void)
 /**
  * Select other parameters
  */
-void screen_other_params(void)
+void screen_select_sectors(void)
 {
+  unsigned char cf=0;
+  unsigned char ready=false;
+  unsigned char k;
+  unsigned short num_sectors;
+  PercomBlock pb;
 
+  num_sectors=drive_detect(source_drive,destination_drive,&pb);
+  memcpy(screen_status,screen_status_sectors,16);
+
+  screen_percom_block(&pb);
+  
+  while (ready==false)
+    {
+      switch(cf)
+	{
+	case 0:
+	  k=screen_input_short(screen_starting_read_sector,&starting_read_sector,5,1);
+	  break;
+	case 1:
+	  k=screen_input_short(screen_ending_read_sector,&ending_read_sector,5,num_sectors);
+	  break;
+	case 2:
+	  k=screen_input_short(screen_starting_write_sector,&starting_write_sector,5,1);
+	  break;
+	}
+
+      switch(k)
+	{
+	case 0x1C:
+	case 0x1E:
+	  if (cf!=0)
+	    cf--;
+	  break;
+	case 0x1D:
+	case 0x1F:
+	  if (cf!=2)
+	    cf++;
+	  break;
+	default:
+	  if (cf<=2)
+	    cf++;
+	  else
+	    ready=true;
+	}
+    }  
 }
 
 /**
@@ -353,7 +400,7 @@ void screen_other_params(void)
 void screen_run(void)
 {
   screen_select_drives();
-  screen_other_params();
+  screen_select_sectors();
   
   for (;;) {}
   

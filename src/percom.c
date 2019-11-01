@@ -29,7 +29,8 @@ unsigned char percom_get(unsigned char d, PercomBlock* p)
   OS.dcb.dtimlo=0x0F; // Timeout
   OS.dcb.dstats=0x40; // tell SIO it's a read.
   OS.dcb.dbyt=12;     // Percom blocks are 12 bytes in length.
-
+  OS.dcb.daux=0;
+  
   // Call SIOV
   r.pc=0xE459;
   _sys(&r);
@@ -73,6 +74,7 @@ unsigned char percom_set(unsigned char d, PercomBlock* p)
   OS.dcb.dtimlo=0x0F; // Timeout
   OS.dcb.dstats=0x80; // tell SIO it's a write.
   OS.dcb.dbyt=12;     // Percom blocks are 12 bytes in length.
+  OS.dcb.daux=0;
 
   // take the percom data and swap 16 bit quantities.
   sector_buffer[0]=p->num_tracks;

@@ -21,8 +21,8 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
 {
   unsigned char status;
 
-  status=sector_get(s,DETECT_READ_SECTOR,128,&sector_buffer);
   status=percom_get(s,pb);
+  status=sector_get(s,DETECT_READ_SECTOR,pb->sector_size,&sector_buffer);
 
   if (pb->reserved1==0xFF)
     {
@@ -30,7 +30,7 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
       // to read sector 1040 to detect a medium
       // density disk.
 
-      status=sector_get(s,1040,128,&sector_buffer);
+      /* status=sector_get(s,1040,128,&sector_buffer); */
 
       if (status==0x01) // read successful.
 	{
@@ -39,7 +39,7 @@ unsigned short drive_detect(unsigned char s, unsigned char d, PercomBlock* pb)
 	}
     }
 
-  if (status=0x01)
+  if (status=0x01 && (s!=d))
     percom_set(d,pb); // TODO: get status?
 
   return (pb->num_tracks*pb->num_sides*pb->sectors_per_track);

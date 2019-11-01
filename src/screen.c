@@ -163,19 +163,15 @@ void screen_num(unsigned char* v, long n, unsigned char pos)
  * d = default value
  * ret = arrow key, return, or esc code
  */
-unsigned char screen_input_char(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
+unsigned char _screen_input(unsigned char* v, unsigned char* tmp, unsigned char l, unsigned char d)
 {
   unsigned char pos;
-  unsigned char tmp[6];
   unsigned char k;
   bool done;
-  
+
   // Set up default value
   utoa(d,tmp,10);
   screen_num(v,d,CURSOR_BEGIN_X);
-  
-  // first highlight the field
-  screen_hilight(v,1);
 
   // Set cursor to beginning of field.
   cx=ox=CURSOR_BEGIN_X;
@@ -222,14 +218,33 @@ unsigned char screen_input_char(unsigned char* v, unsigned char* i, unsigned cha
       if (pos>=l)
 	done=true;
     }
-  
-  // Convert string to target int
-  *i=atoi(tmp);
-  
-  // then unhighlight the field
+
+  return k;
+}
+
+unsigned char screen_input_char(unsigned char* v, unsigned char* i, unsigned char l, unsigned short d)
+{
+  unsigned char k;
+  unsigned char tmp[2];
+
+  screen_hilight(v,1);
+  k=_screen_input(v,tmp,l,d); 
+  *i=atoi(tmp);  
   screen_hilight(v,0);
 
-  // Return last key pressed.
+  return k;
+}
+
+unsigned char screen_input_short(unsigned char* v, unsigned short* i, unsigned char l, unsigned short d)
+{
+  unsigned char k;
+  unsigned char tmp[2];
+
+  screen_hilight(v,1);
+  k=_screen_input(v,tmp,l,d); 
+  *i=atoi(tmp);
+  screen_hilight(v,0);
+
   return k;
 }
 
